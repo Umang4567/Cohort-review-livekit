@@ -191,15 +191,15 @@ function FeedbackInterface({ courseName, userName }: { courseName: string; userN
                         <div className="w-full max-w-md mx-auto mb-8">
                             <BarVisualizer
                                 state={agentState}
-                                barCount={32}
+                                barCount={6}
                                 trackRef={audioTrack}
-                                color="#60a5fa"
-                                className="w-full h-[40px]"
-                                options={{ minHeight: 2, maxHeight: 40 }}
+                                color="#ffffff"
+                                className="w-full h-[20px]"
+                                options={{ minHeight: 2, maxHeight: 20 }}
                             />
                         </div>
 
-                        <ScrollArea className="h-[300px] rounded-lg border border-white/5 bg-black/30 p-4">
+                        <ScrollArea className="h-[500px] rounded-lg border border-white/5 bg-black/30 p-4">
                             <TranscriptionView onMessagesUpdate={handleMessagesUpdate} />
                         </ScrollArea>
 

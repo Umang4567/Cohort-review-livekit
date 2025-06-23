@@ -26,8 +26,8 @@ export default function TranscriptionView({ onMessagesUpdate }: Props) {
         <div
           key={index}
           className={`p-3 rounded-lg ${message.role === "assistant"
-              ? "bg-black/30 border border-white/5"
-              : "bg-blue-500/10 border border-blue-500/20"
+            ? "bg-black/30 border border-white/5 mr-20"
+            : "bg-blue-500/10 border border-blue-500/20 ml-20"
             }`}
         >
           <p className="text-sm font-fira mb-1 text-slate-400">

@@ -61,7 +61,8 @@ class InterviewAgent(Agent):
                  skill_level: str = "mid") -> None:
         super().__init__(
             instructions=get_interview_instructions(role, candidate_name, skill_level),
-            stt=deepgram.STT(model="nova-2-meeting"),
+            # stt=deepgram.STT(model="nova-2-meeting"),
+            stt=openai.STT(model="whisper-1"),
             llm=openai.LLM(model="gpt-4o-mini"),
             tts=openai.TTS(voice="alloy"),
             turn_detection=MultilingualModel(),
