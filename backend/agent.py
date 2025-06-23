@@ -205,7 +205,7 @@ async def entrypoint(ctx: JobContext):
     role = "Software Engineer"  # default
     skill_level = "mid"  # default
     candidate_name = participant.identity or "Candidate"
-    course_name = "Gen AI Launch Pad"  # default course name
+    course_name = ""  # default empty course name
     
     # Option 1: Parse from room name (format: interview-name-skill-timestamp)
     room_parts = ctx.room.name.split('-')
@@ -217,13 +217,11 @@ async def entrypoint(ctx: JobContext):
     if participant.metadata:
         try:
             metadata = json.loads(participant.metadata)
-            course_name = metadata.get('courseName', None) or "Gen AI Launch Pad"
+            course_name = metadata.get('courseName', '')
             skill_level = metadata.get('skill', skill_level)
             logger.info(f"Using metadata - Course Name: {course_name}, Skill: {skill_level}")
         except json.JSONDecodeError:
             logger.warning("Failed to parse participant metadata")
-    else:
-        course_name = "Gen AI Launch Pad"
 
     # Option 3: Fetch from Next.js API endpoint
     api_user_info = await fetch_user_info_from_api(participant.identity, ctx.room.name)
@@ -235,7 +233,6 @@ async def entrypoint(ctx: JobContext):
 
     # Option 4: Parse from environment variables (fallback)
     course_name = os.getenv('COURSE_NAME', course_name)
-    skill_level = os.getenv('INTERVIEW_SKILL_LEVEL', skill_level)
 
     usage_collector = metrics.UsageCollector()
 
@@ -321,16 +318,15 @@ REMEMBER: Follow the 3-stage flow: Introduction → Projects → Technical Quest
 
 
 FEEDBACK_PROMPT = '''
-You are a friendly and conversational voice assistant collecting feedback from participants of the Gen AI Launch Pad. The user has already attended the event . Your name is Build Fast Bot
-
+You are a friendly and conversational voice assistant collecting feedback from course participants. The user has already attended the event. Your name is Build Fast Bot.
 
 Your job is to naturally and politely collect the following information through a conversation:
 
 1. Their thoughts on the relevance of the course content.
 2. How likely they are to recommend the course to others on the scale of 1 to 5.
 3. Whether the course was worth their investment of time/effort on the scale of 1 to 5.
-4. Whether they’re interested in referring a friend to the program.
-5. What advanced topics in Gen AI they’re interested in.
+4. Whether they're interested in referring a friend to the program.
+5. What advanced topics they're interested in learning more about.
 6. A short testimonial about their experience for the website.
 7. Any suggestions for improvements or additional thoughts.
 
@@ -339,13 +335,13 @@ Ask one question at a time and allow the user to respond freely. If an answer is
 Be concise, cheerful, and professional. The goal is to make the user feel heard and appreciated while capturing all the above data points accurately.
 
 Do not give any answer options or multiple-choice scales. Let the user describe everything in their own words.
-Always say course after taking the course name, e.g. "Gen AI Launch Pad" or "Gen AI Launch Pad course".
+Always mention the specific course name when referring to the course.
 End the conversation by thanking them sincerely for their time and valuable feedback.
 '''
 
 
 class FeedbackAgent(Agent):
-    def __init__(self, course_name: str = "Gen AI Launch Pad", participant_name: str = "Participant"):
+    def __init__(self, course_name: str = "", participant_name: str = "Participant"):
         super().__init__(
             instructions=FEEDBACK_PROMPT,
             stt=deepgram.STT(model="nova-2-meeting"),
@@ -360,7 +356,7 @@ class FeedbackAgent(Agent):
 
     async def on_enter(self):
         await self.session.say(
-            f"Hello {self.participant_name}! I'm your Cohort-Review Bot for the {self.course_name}. I'd love to collect your feedback. Let's get started!",
+            f"Hello {self.participant_name}! I'm your Cohort-Review Bot for the {self.course_name} course. I'd love to collect your feedback. Let's get started!",
             allow_interruptions=True
         )
         # Start the feedback conversation
@@ -368,23 +364,24 @@ class FeedbackAgent(Agent):
 
     async def ask_next_question(self):
         questions = [
-            "First, what are your thoughts on the relevance of the course content?",
+            "First, what are your thoughts on the relevance of the content in this course?",
             "How likely are you to recommend this course to others?",
-            "Did you feel the course was worth your investment of time and effort?",
+            "Did you feel this course was worth your investment of time and effort?",
             "Would you be interested in referring a friend to the program?",
-            "Are there any advanced topics in Gen AI you’d like to learn more about?",
+            "What advanced topics would you like to learn more about?",
             "Could you share a short testimonial about your experience for our website?",
             "Do you have any suggestions for improvements or any additional thoughts?"
         ]
+
         for idx, q in enumerate(questions):
             await self.session.say(q, allow_interruptions=True)
             user_response = await self.session.listen()
             self.chat_log.append({"question": q, "response": user_response})
+
         self.feedback_complete = True
         await self.session.say("Thank you so much for your time and valuable feedback! We truly appreciate it.")
         print("Collected Feedback Chat Log:")
         print(json.dumps(self.chat_log, indent=2, ensure_ascii=False))
-
 
 if __name__ == "__main__":
     cli.run_app(

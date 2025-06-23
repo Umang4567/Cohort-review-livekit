@@ -1,144 +1,89 @@
 "use client";
 
-import { NoAgentNotification } from "@/components/NoAgentNotification";
-import TranscriptionView from "@/components/TranscriptionView";
-import UserInfoForm, { UserInfo } from "@/components/UserInfoForm";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  BarVisualizer,
-  DisconnectButton,
-  RoomAudioRenderer,
-  RoomContext,
-  VoiceAssistantControlBar,
-  useVoiceAssistant,
-} from "@livekit/components-react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Room, RoomEvent } from "livekit-client";
-import { Mic, MicOff, Send, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import type { ConnectionDetails } from "./api/connection-details/route";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { motion } from "framer-motion";
 
-export default function Page() {
-  const [room] = useState(new Room());
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+export default function HomePage() {
+  const router = useRouter();
+  const [courseName, setCourseName] = useState("");
 
-  const onConnectButtonClicked = useCallback(
-    async (userData: UserInfo) => {
-      const url = new URL(
-        process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? "/api/connection-details",
-        window.location.origin
-      );
-
-      url.searchParams.set("name", userData.name);
-      url.searchParams.set("skillLevel", userData.skillLevel);
-      url.searchParams.set("courseName", userData.courseName);
-      if (userData.experience) {
-        url.searchParams.set("experience", userData.experience);
-      }
-
-      const response = await fetch(url.toString());
-      const connectionDetailsData: ConnectionDetails = await response.json();
-
-      await room.connect(connectionDetailsData.serverUrl, connectionDetailsData.participantToken);
-      await room.localParticipant.setMicrophoneEnabled(true);
-      setUserInfo(userData);
-    },
-    [room]
-  );
-
-  useEffect(() => {
-    room.on(RoomEvent.MediaDevicesError, onDeviceFailure);
-    return () => {
-      room.off(RoomEvent.MediaDevicesError, onDeviceFailure);
-    };
-  }, [room]);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (courseName.trim()) {
+      const encodedCourseName = encodeURIComponent(courseName.trim());
+      router.push(`/${encodedCourseName}`);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0e0f23] to-[#1c1d3f] text-white">
-      {!userInfo ? (
-        <UserInfoForm onSubmit={onConnectButtonClicked} />
-      ) : (
-        <RoomContext.Provider value={room}>
-          <AIInterviewInterface />
-          <RoomAudioRenderer />
-        </RoomContext.Provider>
-      )}
-    </div>
-  );
-}
-
-function AIInterviewInterface() {
-  const { state: agentState, audioTrack } = useVoiceAssistant();
-  const isRecording = agentState === "listening";
-  const isConnected = agentState !== "disconnected";
-
-  return (
-    <div className="flex flex-col items-center px-6 pt-8">
-      <div className="mb-6 text-center">
-        <h1 className="text-4xl font-bold">
-          Your <span className="text-blue-400">Feedback</span> Matters
-        </h1>
-        <p className="text-slate-300 mt-2">
-          Share your thoughts and help us improve our AI workshops and events
-        </p>
-      </div>
-
-      <div className="w-full max-w-4xl bg-[#1e203c] rounded-2xl shadow-lg p-6 relative">
-        <div className="absolute top-4 left-4">
-          <Button className="bg-blue-600 text-white hover:bg-blue-700" size="sm">
-            Back to events
-          </Button>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-8">
+          <motion.h1
+            className="text-4xl font-playfair mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            Course Feedback
+          </motion.h1>
+          <motion.p
+            className="text-slate-400 font-fira"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            Share your thoughts on the course
+          </motion.p>
         </div>
 
-        <div className="absolute top-4 right-4">
-          <Button variant="outline" size="sm">
-            Can't speak? Try Text mode
-          </Button>
-        </div>
-
-        <div className="flex flex-col items-center py-6">
-          <div className="w-full max-w-md">
-            <BarVisualizer
-              state={agentState}
-              barCount={6}
-              trackRef={audioTrack}
-              color="white"
-              className="w-full h-[64px]"
-              options={{ minHeight: 60, maxHeight: 60, }}
+        <motion.form
+          onSubmit={handleSubmit}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="space-y-4"
+        >
+          <div className="relative">
+            <input
+              type="text"
+              value={courseName}
+              onChange={(e) => setCourseName(e.target.value)}
+              placeholder="Enter course name"
+              className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg 
+                       focus:outline-none focus:border-blue-500/50 transition-all duration-300
+                       text-white placeholder-slate-500 font-fira"
+              required
             />
+            <div className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-xl opacity-50" />
           </div>
-          <p className="text-sm mt-4 text-slate-400">Providing feedback for:</p>
-          <h2 className="text-lg font-semibold text-white text-center mt-1">
-            {/* Vibe Marketing : Automate Your Personal Brand & Lead Generation */}
-          </h2>
-        </div>
 
-        <ScrollArea className="max-h-[300px] space-y-4 px-2">
-          <TranscriptionView />
-        </ScrollArea>
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500
+                     text-white font-medium py-3 rounded-lg transition-all duration-300 shadow-lg
+                     hover:shadow-blue-500/20 hover:shadow-2xl"
+          >
+            Start Feedback
+          </Button>
+        </motion.form>
 
-        <div className="flex flex-col items-center mt-6 space-y-3">
-          <div className="flex items-center space-x-2">
-            <VoiceAssistantControlBar controls={{ leave: false }} />
-            <DisconnectButton className="!bg-transparent !border-none">
-              <Button variant="outline" size="sm">
-                <X className="w-4 h-4" />
-              </Button>
-            </DisconnectButton>
-          </div>
-        </div>
-      </div>
-
-      <NoAgentNotification state={agentState} />
+        <motion.div
+          className="mt-8 text-center text-sm text-slate-500 font-fira"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          Your feedback helps us improve our courses
+        </motion.div>
+      </motion.div>
     </div>
-  );
-}
-
-function onDeviceFailure(error: Error) {
-  console.error(error);
-  alert(
-    "Error acquiring camera or microphone permissions. Please make sure you grant the necessary permissions in your browser and reload the tab"
   );
 }
