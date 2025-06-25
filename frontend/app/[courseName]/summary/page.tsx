@@ -24,6 +24,8 @@ export default function SummaryPage() {
     const [error, setError] = useState<string | null>(null);
     const courseName = decodeURIComponent(params.courseName as string);
     const messages = searchParams.get('messages') ? JSON.parse(decodeURIComponent(searchParams.get('messages') as string)) : null;
+    const userName = searchParams.get('userName') ? decodeURIComponent(searchParams.get('userName') as string) : null;
+    const userEmail = searchParams.get('userEmail') ? decodeURIComponent(searchParams.get('userEmail') as string) : null;
     const apiCallMade = useRef(false);
 
     useEffect(() => {
@@ -38,6 +40,15 @@ export default function SummaryPage() {
 
                 apiCallMade.current = true;
 
+                // Get the analysis from the URL params
+                const analysisParam = searchParams.get('analysis');
+                if (analysisParam) {
+                    const analysis = JSON.parse(decodeURIComponent(analysisParam));
+                    setSummary(analysis);
+                    return;
+                }
+
+                // Fallback to generating summary if analysis is not in URL
                 const response = await fetch('/api/generate-summary', {
                     method: 'POST',
                     headers: {
@@ -46,6 +57,8 @@ export default function SummaryPage() {
                     body: JSON.stringify({
                         messages,
                         courseName,
+                        userName,
+                        userEmail,
                     }),
                 });
 
@@ -62,7 +75,7 @@ export default function SummaryPage() {
         };
 
         generateSummary();
-    }, [messages, courseName]);
+    }, [messages, courseName, userName, userEmail, searchParams]);
 
     if (error) {
         return (
@@ -88,7 +101,7 @@ export default function SummaryPage() {
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-2xl font-fira text-blue-400"
+                    className="text-2xl font-primary text-blue-400"
                 >
                     Analyzing feedback...
                 </motion.div>
@@ -108,7 +121,7 @@ export default function SummaryPage() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="text-3xl font-playfair bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400"
+                        className="text-3xl font-primary bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400"
                     >
                         Feedback Summary
                     </motion.h1>
@@ -118,7 +131,26 @@ export default function SummaryPage() {
                         transition={{ delay: 0.2 }}
                     >
                         <Button
-                            onClick={() => router.push('/')}
+                            onClick={async () => {
+                                try {
+                                    await fetch('/api/store-feedback', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            userName,
+                                            userEmail,
+                                            courseName,
+                                            ...summary,
+                                            rawMessages: messages
+                                        }),
+                                    });
+                                } catch (error) {
+                                    console.error('Error storing feedback:', error);
+                                }
+                                router.push('/');
+                            }}
                             className="bg-black/20 hover:bg-black/30 text-white border border-white/10"
                         >
                             Exit
@@ -133,19 +165,29 @@ export default function SummaryPage() {
                     className="space-y-6"
                 >
                     <div className="backdrop-blur-sm border border-white/10 bg-black/20 rounded-2xl p-6">
-                        <h2 className="text-xl font-playfair text-white mb-4">{courseName}</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <p className="text-sm text-slate-400 font-primary mb-1">Participant</p>
+                                <p className="text-lg font-primary text-white">{userName}</p>
+                                <p className="text-sm font-primary text-slate-400">{userEmail}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-slate-400 font-primary mb-1">Course</p>
+                                <p className="text-lg font-primary text-white">{courseName}</p>
+                            </div>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="bg-black/30 rounded-lg p-4 border border-white/5">
-                                <p className="text-sm text-slate-400 font-fira mb-1">Sentiment</p>
-                                <p className="text-lg font-playfair capitalize text-white">{summary.sentiment}</p>
+                                <p className="text-sm text-slate-400 font-primary mb-1">Sentiment</p>
+                                <p className="text-lg font-primary capitalize text-white">{summary.sentiment}</p>
                             </div>
                             <div className="bg-black/30 rounded-lg p-4 border border-white/5">
-                                <p className="text-sm text-slate-400 font-fira mb-1">Rating</p>
-                                <p className="text-lg font-playfair text-white">{summary.rating}/5</p>
+                                <p className="text-sm text-slate-400 font-primary mb-1">Rating</p>
+                                <p className="text-lg font-primary text-white">{summary.rating}/5</p>
                             </div>
                             <div className="bg-black/30 rounded-lg p-4 border border-white/5">
-                                <p className="text-sm text-slate-400 font-fira mb-1">Recommendation</p>
-                                <p className="text-lg font-playfair text-white">{summary.recommendationLikelihood}/5</p>
+                                <p className="text-sm text-slate-400 font-primary mb-1">Recommendation</p>
+                                <p className="text-lg font-primary text-white">{summary.recommendationLikelihood}/5</p>
                             </div>
                         </div>
                     </div>
@@ -157,10 +199,10 @@ export default function SummaryPage() {
                             transition={{ delay: 0.4 }}
                             className="backdrop-blur-sm border border-white/10 bg-black/20 rounded-2xl p-6"
                         >
-                            <h3 className="text-lg font-playfair text-white mb-3">Key Points</h3>
+                            <h3 className="text-lg font-primary text-white mb-3">Key Points</h3>
                             <ul className="space-y-2">
                                 {summary.keyPoints.map((point, index) => (
-                                    <li key={index} className="text-slate-300 font-fira text-sm flex items-start">
+                                    <li key={index} className="text-slate-300 font-primary text-sm flex items-start">
                                         <span className="text-blue-400 mr-2">•</span>
                                         {point}
                                     </li>
@@ -174,10 +216,10 @@ export default function SummaryPage() {
                             transition={{ delay: 0.5 }}
                             className="backdrop-blur-sm border border-white/10 bg-black/20 rounded-2xl p-6"
                         >
-                            <h3 className="text-lg font-playfair text-white mb-3">Areas for Improvement</h3>
+                            <h3 className="text-lg font-primary text-white mb-3">Areas for Improvement</h3>
                             <ul className="space-y-2">
                                 {summary.improvements.map((improvement, index) => (
-                                    <li key={index} className="text-slate-300 font-fira text-sm flex items-start">
+                                    <li key={index} className="text-slate-300 font-primary text-sm flex items-start">
                                         <span className="text-purple-400 mr-2">•</span>
                                         {improvement}
                                     </li>
@@ -192,12 +234,12 @@ export default function SummaryPage() {
                         transition={{ delay: 0.6 }}
                         className="backdrop-blur-sm border border-white/10 bg-black/20 rounded-2xl p-6"
                     >
-                        <h3 className="text-lg font-playfair text-white mb-3">Topics of Interest</h3>
+                        <h3 className="text-lg font-primary text-white mb-3">Topics of Interest</h3>
                         <div className="flex flex-wrap gap-2">
                             {summary.topicsOfInterest.map((topic, index) => (
                                 <span
                                     key={index}
-                                    className="px-3 py-1 rounded-full text-sm font-fira
+                                    className="px-3 py-1 rounded-full text-sm font-primary
                                              bg-black/30 border border-white/5 text-blue-400"
                                 >
                                     {topic}
@@ -212,8 +254,8 @@ export default function SummaryPage() {
                         transition={{ delay: 0.7 }}
                         className="backdrop-blur-sm border border-white/10 bg-black/20 rounded-2xl p-6"
                     >
-                        <h3 className="text-lg font-playfair text-white mb-3">Testimonial</h3>
-                        <blockquote className="text-slate-300 font-fira text-sm italic">
+                        <h3 className="text-lg font-primary text-white mb-3">Testimonial</h3>
+                        <blockquote className="text-slate-300 font-primary text-sm italic">
                             "{summary.testimonial}"
                         </blockquote>
                     </motion.div>

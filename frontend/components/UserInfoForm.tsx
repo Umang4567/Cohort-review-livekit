@@ -15,6 +15,7 @@ import {
 
 export interface UserInfo {
   name: string;
+  email: string;
   skillLevel: "junior" | "mid" | "senior" | "staff";
   courseName: string;
   experience?: string;
@@ -27,6 +28,7 @@ interface UserInfoFormProps {
 export default function UserInfoForm({ onSubmit }: UserInfoFormProps) {
   const [userInfo, setUserInfo] = useState<UserInfo>({
     name: "",
+    email: "",
     skillLevel: "mid",
     courseName: "",
   });
@@ -35,7 +37,7 @@ export default function UserInfoForm({ onSubmit }: UserInfoFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    if (userInfo.name.trim()) {
+    if (userInfo.name.trim() && userInfo.email.trim()) {
       onSubmit(userInfo);
     }
     setIsLoading(false);
@@ -61,6 +63,18 @@ export default function UserInfoForm({ onSubmit }: UserInfoFormProps) {
               onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
               // className="w-full px-4 py-2 border border-white/20 rounded-lg bg-[#1c1c1c] text-white focus-visible:border-blue-500 focus-visible:ring-0"
               className="bg-black border border-white/20 text-white placeholder-white/40 focus-visible:ring-blue-500 "
+              required
+            />
+          </div>
+
+          <div>
+            <Label className="block text-sm font-medium mb-1 text-white">Email Address</Label>
+            <Input
+              type="email"
+              placeholder="Enter your email address"
+              value={userInfo.email}
+              onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
+              className="bg-black border border-white/20 text-white placeholder-white/40 focus-visible:ring-blue-500"
               required
             />
           </div>
@@ -105,7 +119,7 @@ export default function UserInfoForm({ onSubmit }: UserInfoFormProps) {
             size="lg"
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300"
             disabled={
-              !userInfo.name || !userInfo.courseName || !userInfo.skillLevel || isLoading
+              !userInfo.name || !userInfo.email || !userInfo.courseName || !userInfo.skillLevel || isLoading
             }
           >
             {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "Start Feedback"}

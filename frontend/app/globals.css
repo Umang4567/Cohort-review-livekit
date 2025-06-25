@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -37,15 +37,12 @@
   body {
     @apply bg-black text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: var(--font-poppins), sans-serif;
   }
 }
 
-.font-playfair {
-  font-family: 'Playfair Display', serif;
-}
-
-.font-fira {
-  font-family: 'Fira Code', monospace;
+.font-primary {
+  font-family: var(--font-poppins), sans-serif;
 }
 
 /* Custom scrollbar */
@@ -92,6 +89,15 @@
   backdrop-filter: blur(16px) saturate(180%);
   background-color: rgba(17, 25, 40, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+.glassmorphism {
+  background: rgba(17, 25, 40, 0.75);
+  /* light mode background */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(12, 18, 23, 0.1);
+  /* light border */
 }
 
 /* Smooth transitions */

@@ -2,26 +2,17 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import "@livekit/components-styles";
 import { Metadata } from "next";
-import { Inter, Playfair_Display, Fira_Code } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { FuturisticBackground } from "@/components/ui/futuristic-background";
 import { cn } from "@/lib/utils";
+import FeedbackHeader from "./components/Header";
 // import { FuturisticBackground } from "@/components/ui/futuristic-background";
 
-const inter = Inter({
-  weight: "400",
-  subsets: ["latin"],
-});
-
-const playfair = Playfair_Display({
+const poppins = Poppins({
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-playfair',
-});
-
-const firaCode = Fira_Code({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-fira-code',
+  variable: '--font-poppins',
 });
 
 export const metadata: Metadata = {
@@ -38,8 +29,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <body className={cn(
-        playfair.variable,
-        firaCode.variable,
+        poppins.variable,
         'font-sans antialiased bg-gradient-to-br from-[#0e0f23] to-[#1c1d3f] min-h-screen'
       )}>
         <ThemeProvider
@@ -48,8 +38,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="ambient-bg min-h-screen">
-            {children}
+          <div className="ambient-bg min-h-screen relative">
+            <FeedbackHeader />
+            <div className="pt-40">
+              {children}
+            </div>
           </div>
         </ThemeProvider>
       </body>
