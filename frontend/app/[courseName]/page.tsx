@@ -187,9 +187,9 @@ function FeedbackInterface({ courseName, userName, userEmail }: { courseName: st
             // const encodedUserEmail = encodeURIComponent(userEmail || '');
             // const encodedAnalysis = encodeURIComponent(JSON.stringify(analysis));
 
-            // router.push(
-            //     `/${encodeURIComponent(courseName)}/summary?messages=${encodedMessages}&userName=${encodedUserName}&userEmail=${encodedUserEmail}&analysis=${encodedAnalysis}`
-            // );
+            router.push(
+                '/'  // `/${encodeURIComponent(courseName)}/summary?messages=${encodedMessages}&userName=${encodedUserName}&userEmail=${encodedUserEmail}&analysis=${encodedAnalysis}`
+            );
         } catch (error) {
             console.error('Error analyzing conversation:', error);
             // Still redirect to summary page even if analysis fails
