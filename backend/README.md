@@ -40,7 +40,7 @@ LIVEKIT_API_SECRET=your_secret_here
 
 Start the feedback agent:
 ```bash
-python feedback_agent.py
+# python feedback_agent.py
 ```
 
 ## Environment Variables
